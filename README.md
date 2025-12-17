@@ -6,7 +6,7 @@ A Jetpack Compose library for creating Instagram Reels / TikTok / YouTube Shorts
 
 ## Demo
 
-<video src="https://github.com/manjees/compose-reels/raw/main/compose-reels-sample.mp4" controls width="300"></video>
+<video src="https://github.com/user-attachments/assets/f3cf1714-1e0c-43df-851b-752f16d92c07" controls width="300"></video>
 
 ## Features
 
