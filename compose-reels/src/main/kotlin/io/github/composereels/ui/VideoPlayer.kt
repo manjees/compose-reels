@@ -68,7 +68,7 @@ internal fun VideoPlayer(
                 PlayerView(ctx).apply {
                     this.player = player
                     useController = false
-                    resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+                    resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
                     layoutParams = FrameLayout.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT,
                         ViewGroup.LayoutParams.MATCH_PARENT
@@ -87,7 +87,7 @@ internal fun VideoPlayer(
                 model = thumbnailUrl,
                 contentDescription = null,
                 modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop
+                contentScale = ContentScale.Fit
             )
         }
     }

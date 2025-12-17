@@ -19,6 +19,6 @@ internal fun ImageViewer(
         model = imageUrl,
         contentDescription = contentDescription,
         modifier = modifier.fillMaxSize(),
-        contentScale = ContentScale.Crop
+        contentScale = ContentScale.Fit
     )
 }
