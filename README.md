@@ -4,6 +4,10 @@ A Jetpack Compose library for creating Instagram Reels / TikTok / YouTube Shorts
 
 [![](https://jitpack.io/v/manjees/compose-reels.svg)](https://jitpack.io/#manjees/compose-reels)
 
+## Demo
+
+<video src="https://github.com/manjees/compose-reels/raw/main/compose-reels-sample.mp4" controls width="300"></video>
+
 ## Features
 
 - Vertical snap scrolling (VerticalPager)
