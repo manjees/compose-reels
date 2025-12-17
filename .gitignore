@@ -71,3 +71,9 @@ lint/tmp/
 
 # Mac OS
 .DS_Store
+
+# Documentation (internal)
+doc/
+
+# Claude
+.claude/
