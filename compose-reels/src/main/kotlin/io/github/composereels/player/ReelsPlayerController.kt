@@ -24,14 +24,16 @@ internal class ReelsPlayerController(
 
     /**
      * Get or create a player for the given page index.
+     * Returns null if no player is available from the pool.
      */
-    fun getPlayer(pageIndex: Int, videoUrl: String): ExoPlayer {
-        return activePlayersMap.getOrPut(pageIndex) {
-            playerPool.acquire().apply {
-                setMediaItem(MediaItem.fromUri(videoUrl))
-                prepare()
-            }
-        }
+    fun getPlayer(pageIndex: Int, videoUrl: String): ExoPlayer? {
+        activePlayersMap[pageIndex]?.let { return it }
+
+        val player = playerPool.acquire() ?: return null
+        player.setMediaItem(MediaItem.fromUri(videoUrl))
+        player.prepare()
+        activePlayersMap[pageIndex] = player
+        return player
     }
 
     /**

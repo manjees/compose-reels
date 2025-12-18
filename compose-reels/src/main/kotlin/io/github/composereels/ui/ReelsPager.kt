@@ -134,12 +134,14 @@ internal fun <T> ReelsPagerImpl(
                 when (source) {
                     is MediaSource.Video -> {
                         val player = playerController.getPlayer(page, source.url)
-                        VideoPlayer(
-                            player = player,
-                            isPlaying = isCurrentPage && reelsState.isPlaying,
-                            isMuted = reelsState.isMuted,
-                            thumbnailUrl = source.thumbnailUrl
-                        )
+                        if (player != null) {
+                            VideoPlayer(
+                                player = player,
+                                isPlaying = isCurrentPage && reelsState.isPlaying,
+                                isMuted = reelsState.isMuted,
+                                thumbnailUrl = source.thumbnailUrl
+                            )
+                        }
                     }
 
                     is MediaSource.Image -> {

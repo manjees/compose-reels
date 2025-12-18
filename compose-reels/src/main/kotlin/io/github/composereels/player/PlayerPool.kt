@@ -1,6 +1,7 @@
 package io.github.composereels.player
 
 import android.content.Context
+import android.util.Log
 import androidx.annotation.OptIn
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
@@ -18,16 +19,23 @@ internal class PlayerPool(
     private val availablePlayers = LinkedList<ExoPlayer>()
     private val inUsePlayers = mutableSetOf<ExoPlayer>()
 
+    private val totalPlayers: Int
+        get() = availablePlayers.size + inUsePlayers.size
+
     /**
      * Acquire a player from the pool.
      * Creates a new one if the pool is empty and we haven't reached max size.
+     * Returns null if pool is at max capacity with no available players.
      */
     @Synchronized
-    fun acquire(): ExoPlayer {
+    fun acquire(): ExoPlayer? {
         val player = if (availablePlayers.isNotEmpty()) {
             availablePlayers.removeFirst()
-        } else {
+        } else if (totalPlayers < maxSize) {
             createPlayer()
+        } else {
+            Log.w(TAG, "PlayerPool at max capacity ($maxSize). No available players.")
+            return null
         }
         inUsePlayers.add(player)
         return player
@@ -70,5 +78,9 @@ internal class PlayerPool(
                 playWhenReady = false
                 repeatMode = ExoPlayer.REPEAT_MODE_ONE
             }
+    }
+
+    companion object {
+        private const val TAG = "PlayerPool"
     }
 }
