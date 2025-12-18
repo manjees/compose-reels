@@ -119,10 +119,12 @@ ReelsConfig(
     isZoomEnabled = true,      // Enable pinch-to-zoom
     isMuted = false,           // Start muted
     infiniteScroll = false,    // Loop back to first item
-    preloadCount = 2,          // Preload N items ahead
-    playerPoolSize = 3         // Max ExoPlayer instances
+    preloadCount = 2,          // Preload N items in both directions
+    playerPoolSize = 5         // Max ExoPlayer instances
 )
 ```
+
+> **Note:** `playerPoolSize` must be at least `(preloadCount * 2) + 1` to support preloading in both directions plus the current page. You can use `ReelsConfig.minPoolSizeFor(preloadCount)` to calculate the minimum required pool size.
 
 ## ReelsState API
 
