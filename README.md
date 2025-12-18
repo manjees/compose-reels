@@ -36,7 +36,7 @@ Add dependency to your module's `build.gradle.kts`:
 
 ```kotlin
 dependencies {
-    implementation("com.github.manjees:compose-reels:1.0.0")
+    implementation("com.github.manjees:compose-reels:1.0.2")
 }
 ```
 
