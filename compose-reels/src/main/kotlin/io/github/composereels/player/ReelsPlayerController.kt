@@ -110,7 +110,6 @@ internal fun rememberReelsPlayerController(
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
                 Lifecycle.Event.ON_PAUSE -> controller.pauseAll()
-                Lifecycle.Event.ON_DESTROY -> controller.release()
                 else -> Unit
             }
         }

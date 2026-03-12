@@ -5,9 +5,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.pager.VerticalPager
-import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -20,8 +23,6 @@ import io.github.composereels.ui.gesture.pinchToZoom
 import io.github.composereels.ui.gesture.reelsTapGesture
 import io.github.composereels.ui.gesture.rememberZoomState
 import kotlinx.coroutines.flow.distinctUntilChanged
-
-private const val INFINITE_SCROLL_PAGE_COUNT = Int.MAX_VALUE / 2
 
 /**
  * Internal implementation of the reels pager.
@@ -42,28 +43,17 @@ internal fun <T> ReelsPagerImpl(
 
     val context = LocalContext.current
     val playerController = rememberReelsPlayerController(context, config)
+    val pagerState = reelsState.pagerState
 
-    val actualPageCount = if (config.infiniteScroll) INFINITE_SCROLL_PAGE_COUNT else items.size
-    val startPage = if (config.infiniteScroll) INFINITE_SCROLL_PAGE_COUNT / 2 else 0
-
-    val pagerState = rememberPagerState(
-        initialPage = startPage,
-        pageCount = { actualPageCount }
-    )
-
-    fun getActualIndex(page: Int): Int {
-        return if (config.infiniteScroll) {
-            ((page - startPage) % items.size + items.size) % items.size
-        } else {
-            page
-        }
-    }
+    // Track settled page to avoid recomposition during scroll
+    var settledPage by remember { mutableIntStateOf(pagerState.settledPage) }
 
     LaunchedEffect(pagerState) {
         snapshotFlow { pagerState.settledPage }
             .distinctUntilChanged()
             .collect { page ->
-                val actualIndex = getActualIndex(page)
+                settledPage = page
+                val actualIndex = reelsState.getActualIndex(page)
                 if (actualIndex in items.indices) {
                     onPageChanged(actualIndex, items[actualIndex])
                     playerController.releaseDistantPlayers(page, config.preloadCount)
@@ -82,12 +72,11 @@ internal fun <T> ReelsPagerImpl(
         playerController.setMuted(reelsState.isMuted)
     }
 
-    LaunchedEffect(reelsState.isPlaying, pagerState.currentPage) {
-        val currentPage = pagerState.currentPage
+    LaunchedEffect(reelsState.isPlaying, settledPage) {
         if (reelsState.isPlaying) {
-            playerController.play(currentPage)
+            playerController.play(settledPage)
         } else {
-            playerController.pause(currentPage)
+            playerController.pause(settledPage)
         }
     }
 
@@ -97,11 +86,11 @@ internal fun <T> ReelsPagerImpl(
         userScrollEnabled = true,
         beyondViewportPageCount = config.preloadCount
     ) { page ->
-        val actualIndex = getActualIndex(page)
+        val actualIndex = reelsState.getActualIndex(page)
         val item = items[actualIndex]
         val source = mediaSource(item)
         val zoomState = rememberZoomState()
-        val isCurrentPage = page == pagerState.currentPage
+        val isCurrentPage = page == settledPage
 
         Box(
             modifier = Modifier

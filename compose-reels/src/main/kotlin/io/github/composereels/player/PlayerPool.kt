@@ -52,7 +52,7 @@ internal class PlayerPool(
         player.stop()
         player.clearMediaItems()
 
-        if (availablePlayers.size < maxSize) {
+        if (totalPlayers <= maxSize) {
             availablePlayers.add(player)
         } else {
             player.release()

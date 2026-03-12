@@ -61,16 +61,20 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun ReelsFeedScreen() {
     val items = remember { mutableStateListOf(*SampleData.reels.toTypedArray()) }
-    val reelsState = rememberReelsState(pageCount = { items.size })
+    val config = ReelsConfig(
+        autoPlay = true,
+        isZoomEnabled = true,
+        infiniteScroll = true
+    )
+    val reelsState = rememberReelsState(
+        pageCount = { items.size },
+        config = config
+    )
 
     ComposeReels(
         items = items,
         state = reelsState,
-        config = ReelsConfig(
-            autoPlay = true,
-            isZoomEnabled = true,
-            infiniteScroll = true  // Enable infinite scroll
-        ),
+        config = config,
         mediaSource = { reel -> reel.mediaSource },
         onDoubleTap = { index, reel ->
             val updatedReel = reel.copy(

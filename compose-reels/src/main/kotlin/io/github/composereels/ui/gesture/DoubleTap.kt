@@ -39,7 +39,7 @@ fun Modifier.reelsTapGesture(
             val downTime = System.currentTimeMillis()
             val downPosition = down.position
 
-            val up = waitForUpOrCancellation(pass = PointerEventPass.Initial)
+            val up = waitForUpOrCancellation(pass = PointerEventPass.Main)
 
             if (up != null) {
                 val upPosition = up.position

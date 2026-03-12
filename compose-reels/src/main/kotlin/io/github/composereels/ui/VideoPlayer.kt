@@ -40,6 +40,7 @@ internal fun VideoPlayer(
 
     // Listen to player state
     DisposableEffect(player) {
+        isBuffering = true
         val listener = object : Player.Listener {
             override fun onPlaybackStateChanged(playbackState: Int) {
                 isBuffering = playbackState == Player.STATE_BUFFERING
