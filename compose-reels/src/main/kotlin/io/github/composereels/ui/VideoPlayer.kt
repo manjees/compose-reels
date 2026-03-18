@@ -32,17 +32,42 @@ internal fun VideoPlayer(
     isMuted: Boolean,
     thumbnailUrl: String?,
     modifier: Modifier = Modifier,
-    onError: ((PlaybackException) -> Unit)? = null
+    onError: ((PlaybackException) -> Unit)? = null,
+    onVideoStart: (() -> Unit)? = null,
+    onVideoPaused: ((watchTimeMs: Long) -> Unit)? = null,
+    onVideoCompleted: (() -> Unit)? = null
 ) {
     var isBuffering by remember { mutableStateOf(true) }
     val currentOnError by rememberUpdatedState(onError)
+    val currentOnVideoStart by rememberUpdatedState(onVideoStart)
+    val currentOnVideoPaused by rememberUpdatedState(onVideoPaused)
+    val currentOnVideoCompleted by rememberUpdatedState(onVideoCompleted)
 
     // Listen to player state
     DisposableEffect(player) {
         isBuffering = true
+        var hasStarted = false
+        var watchStartTimeMs = 0L
+
         val listener = object : Player.Listener {
             override fun onPlaybackStateChanged(playbackState: Int) {
                 isBuffering = playbackState == Player.STATE_BUFFERING
+                if (playbackState == Player.STATE_ENDED) {
+                    currentOnVideoCompleted?.invoke()
+                }
+            }
+
+            override fun onIsPlayingChanged(isPlaying: Boolean) {
+                if (isPlaying) {
+                    watchStartTimeMs = System.currentTimeMillis()
+                    if (!hasStarted) {
+                        hasStarted = true
+                        currentOnVideoStart?.invoke()
+                    }
+                } else if (hasStarted && watchStartTimeMs > 0) {
+                    val watchTimeMs = System.currentTimeMillis() - watchStartTimeMs
+                    currentOnVideoPaused?.invoke(watchTimeMs)
+                }
             }
 
             override fun onPlayerError(error: PlaybackException) {
