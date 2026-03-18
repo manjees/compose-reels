@@ -9,9 +9,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.media3.common.PlaybackException
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -36,6 +38,8 @@ internal fun <T> ReelsPagerImpl(
     onPageChanged: (Int, T) -> Unit,
     onDoubleTap: ((Int, T) -> Unit)?,
     onSingleTap: ((Int, T) -> Unit)?,
+    onError: ((Int, T, PlaybackException) -> Unit)?,
+    errorContent: @Composable (BoxScope.(T, PlaybackException) -> Unit)?,
     modifier: Modifier = Modifier,
     overlayContent: @Composable (BoxScope.(T) -> Unit)?
 ) {
@@ -92,6 +96,9 @@ internal fun <T> ReelsPagerImpl(
         val zoomState = rememberZoomState()
         val isCurrentPage = page == settledPage
 
+        var videoError by remember(page) { mutableStateOf<PlaybackException?>(null) }
+        var videoRetryKey by remember(page) { mutableIntStateOf(0) }
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -122,13 +129,20 @@ internal fun <T> ReelsPagerImpl(
             ) {
                 when (source) {
                     is MediaSource.Video -> {
-                        val player = playerController.getPlayer(page, source.url)
+                        val player = remember(page, videoRetryKey) {
+                            playerController.getPlayer(page, source.url)
+                        }
+
                         if (player != null) {
                             VideoPlayer(
                                 player = player,
                                 isPlaying = isCurrentPage && reelsState.isPlaying,
                                 isMuted = reelsState.isMuted,
-                                thumbnailUrl = source.thumbnailUrl
+                                thumbnailUrl = source.thumbnailUrl,
+                                onError = { error ->
+                                    videoError = error
+                                    onError?.invoke(actualIndex, item, error)
+                                }
                             )
                         }
                     }
@@ -142,8 +156,23 @@ internal fun <T> ReelsPagerImpl(
                 }
             }
 
+            // Error overlay - placed above gesture layer for proper interaction
+            if (source is MediaSource.Video && videoError != null) {
+                if (errorContent != null) {
+                    errorContent.invoke(this, item, videoError!!)
+                } else {
+                    ErrorView(
+                        onRetry = {
+                            videoError = null
+                            playerController.releasePlayer(page)
+                            videoRetryKey++
+                        }
+                    )
+                }
+            }
+
             // Playback controls (play button, mute button) - only for videos
-            if (source is MediaSource.Video && isCurrentPage) {
+            if (source is MediaSource.Video && isCurrentPage && videoError == null) {
                 PlaybackControls(
                     isPlaying = reelsState.isPlaying,
                     isMuted = reelsState.isMuted,
