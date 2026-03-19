@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.annotation.OptIn
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.source.MediaSource
 import java.util.LinkedList
 
 /**
@@ -14,7 +15,8 @@ import java.util.LinkedList
 @OptIn(UnstableApi::class)
 internal class PlayerPool(
     private val context: Context,
-    private val maxSize: Int = 3
+    private val maxSize: Int = 3,
+    private val mediaSourceFactory: MediaSource.Factory
 ) {
     private val availablePlayers = LinkedList<ExoPlayer>()
     private val inUsePlayers = mutableSetOf<ExoPlayer>()
@@ -73,6 +75,7 @@ internal class PlayerPool(
 
     private fun createPlayer(): ExoPlayer {
         return ExoPlayer.Builder(context)
+            .setMediaSourceFactory(mediaSourceFactory)
             .build()
             .apply {
                 playWhenReady = false

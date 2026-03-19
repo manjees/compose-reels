@@ -10,6 +10,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import io.github.composereels.ReelsConfig
 
 /**
@@ -19,7 +20,11 @@ internal class ReelsPlayerController(
     context: Context,
     config: ReelsConfig
 ) {
-    private val playerPool = PlayerPool(context, config.playerPoolSize)
+    private val appContext = context.applicationContext
+    private val mediaSourceFactory = DefaultMediaSourceFactory(
+        VideoCache.cacheDataSourceFactory(appContext)
+    )
+    private val playerPool = PlayerPool(appContext, config.playerPoolSize, mediaSourceFactory)
     private val activePlayersMap = mutableMapOf<Int, ExoPlayer>()
 
     /**
