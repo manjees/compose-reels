@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.media3.common.PlaybackException
 import io.github.composereels.model.MediaSource
+import io.github.composereels.model.ReelsAnalytics
 import io.github.composereels.ui.ReelsPagerImpl
 
 /**
@@ -32,6 +33,7 @@ import io.github.composereels.ui.ReelsPagerImpl
  * @param onSingleTap Callback when user single-taps (typically for play/pause)
  * @param onError Callback when a video fails to load. Receives page index, item, and the exception.
  * @param errorContent Optional custom composable to show when a video fails to load. If null, a default retry UI is shown.
+ * @param analytics Analytics callbacks for tracking video playback events (start, pause, complete)
  * @param overlayContent Optional composable to overlay on each item (e.g., profile info, description)
  *
  * @sample
@@ -72,6 +74,7 @@ fun <T> ComposeReels(
     onSingleTap: ((Int, T) -> Unit)? = null,
     onError: ((Int, T, PlaybackException) -> Unit)? = null,
     errorContent: @Composable (BoxScope.(T, PlaybackException) -> Unit)? = null,
+    analytics: ReelsAnalytics? = null,
     overlayContent: @Composable (BoxScope.(T) -> Unit)? = null
 ) {
     ReelsPagerImpl(
@@ -84,6 +87,7 @@ fun <T> ComposeReels(
         onSingleTap = onSingleTap,
         onError = onError,
         errorContent = errorContent,
+        analytics = analytics,
         modifier = modifier,
         overlayContent = overlayContent
     )

@@ -20,6 +20,7 @@ import androidx.compose.ui.platform.LocalContext
 import io.github.composereels.ReelsConfig
 import io.github.composereels.ReelsState
 import io.github.composereels.model.MediaSource
+import io.github.composereels.model.ReelsAnalytics
 import io.github.composereels.player.rememberReelsPlayerController
 import io.github.composereels.ui.gesture.pinchToZoom
 import io.github.composereels.ui.gesture.reelsTapGesture
@@ -40,6 +41,7 @@ internal fun <T> ReelsPagerImpl(
     onSingleTap: ((Int, T) -> Unit)?,
     onError: ((Int, T, PlaybackException) -> Unit)?,
     errorContent: @Composable (BoxScope.(T, PlaybackException) -> Unit)?,
+    analytics: ReelsAnalytics?,
     modifier: Modifier = Modifier,
     overlayContent: @Composable (BoxScope.(T) -> Unit)?
 ) {
@@ -142,7 +144,10 @@ internal fun <T> ReelsPagerImpl(
                                 onError = { error ->
                                     videoError = error
                                     onError?.invoke(actualIndex, item, error)
-                                }
+                                },
+                                onVideoStart = analytics?.onVideoStart?.let { cb -> { cb(actualIndex) } },
+                                onVideoPaused = analytics?.onVideoPaused?.let { cb -> { watchTimeMs -> cb(actualIndex, watchTimeMs) } },
+                                onVideoCompleted = analytics?.onVideoCompleted?.let { cb -> { cb(actualIndex) } }
                             )
                         }
                     }
