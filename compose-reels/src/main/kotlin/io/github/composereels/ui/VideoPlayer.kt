@@ -93,9 +93,8 @@ internal fun VideoPlayer(
     }
 
     // Control playback speed
-    LaunchedEffect(player, playbackSpeed) {
-        val parameters = PlaybackParameters(playbackSpeed)
-        player.setPlaybackParameters(parameters)
+    LaunchedEffect(playbackSpeed) {
+        player.setPlaybackSpeed(playbackSpeed)
     }
 
     Box(modifier = modifier.fillMaxSize()) {

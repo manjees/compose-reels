@@ -15,7 +15,7 @@ A Jetpack Compose library for creating Instagram Reels / TikTok / YouTube Shorts
 - ExoPlayer with player pooling (memory efficient)
 - Pinch-to-zoom with spring animation
 - Double-tap gesture detection
-- Long-press to boost playback to fast mode (TikTok-style 2x)
+- Long-press to boost playback to fast mode (TikTok-style 2x) with visual indicator
 - Play/Pause & Mute controls
 - Infinite scroll support
 - Lifecycle-aware playback management
