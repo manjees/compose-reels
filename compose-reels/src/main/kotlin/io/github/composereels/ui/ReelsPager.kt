@@ -1,10 +1,22 @@
 package io.github.composereels.ui
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.VerticalPager
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.FastForward
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -13,17 +25,22 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
-import androidx.media3.common.PlaybackException
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.media3.common.PlaybackException
 import io.github.composereels.ReelsConfig
 import io.github.composereels.ReelsState
 import io.github.composereels.model.MediaSource
 import io.github.composereels.model.ReelsAnalytics
 import io.github.composereels.player.rememberReelsPlayerController
 import io.github.composereels.ui.gesture.pinchToZoom
-import io.github.composereels.ui.gesture.reelsTapGesture
+import io.github.composereels.ui.gesture.reelsGestures
 import io.github.composereels.ui.gesture.rememberZoomState
 import kotlinx.coroutines.flow.distinctUntilChanged
 
@@ -59,6 +76,9 @@ internal fun <T> ReelsPagerImpl(
             .distinctUntilChanged()
             .collect { page ->
                 settledPage = page
+                // Reset playback speed when page changes
+                reelsState.setPlaybackSpeed(1f)
+                
                 val actualIndex = reelsState.getActualIndex(page)
                 if (actualIndex in items.indices) {
                     onPageChanged(actualIndex, items[actualIndex])
@@ -106,14 +126,22 @@ internal fun <T> ReelsPagerImpl(
                 .fillMaxSize()
                 .background(Color.Black)
         ) {
-            // Media content with zoom and tap gestures
+            // Media content with zoom and gestures (tap, double tap, long press)
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .reelsTapGesture(
-                        enabled = onDoubleTap != null || onSingleTap != null,
+                    .reelsGestures(
+                        enabled = isCurrentPage,
                         onDoubleTap = onDoubleTap?.let { callback -> { _ -> callback(actualIndex, item) } },
-                        onSingleTap = onSingleTap?.let { callback -> { callback(actualIndex, item) } }
+                        onSingleTap = onSingleTap?.let { callback -> { callback(actualIndex, item) } },
+                        onFastPlaybackStart = {
+                            if (config.longPressFastPlaybackEnabled) {
+                                reelsState.setPlaybackSpeed(config.longPressFastPlaybackSpeed)
+                            }
+                        },
+                        onFastPlaybackEnd = {
+                            reelsState.setPlaybackSpeed(1f)
+                        }
                     )
                     .then(
                         if (config.isZoomEnabled) {
@@ -140,6 +168,7 @@ internal fun <T> ReelsPagerImpl(
                                 player = player,
                                 isPlaying = isCurrentPage && reelsState.isPlaying,
                                 isMuted = reelsState.isMuted,
+                                playbackSpeed = if (isCurrentPage) reelsState.playbackSpeed else 1f,
                                 thumbnailUrl = source.thumbnailUrl,
                                 onError = { error ->
                                     videoError = error
@@ -188,6 +217,40 @@ internal fun <T> ReelsPagerImpl(
 
             // User's overlay UI
             overlayContent?.invoke(this, item)
+
+            // Fast playback speed indicator (TikTok style)
+            if (source is MediaSource.Video && isCurrentPage) {
+                AnimatedVisibility(
+                    visible = reelsState.playbackSpeed > 1f,
+                    enter = fadeIn(),
+                    exit = fadeOut(),
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(top = 64.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(Color.Black.copy(alpha = 0.4f))
+                            .padding(horizontal = 12.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.FastForward,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Text(
+                            text = "${reelsState.playbackSpeed.toInt()}x Speed",
+                            color = Color.White,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
         }
     }
 }

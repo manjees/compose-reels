@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.common.PlaybackException
+import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.AspectRatioFrameLayout
@@ -30,6 +31,7 @@ internal fun VideoPlayer(
     player: ExoPlayer,
     isPlaying: Boolean,
     isMuted: Boolean,
+    playbackSpeed: Float = 1f,
     thumbnailUrl: String?,
     modifier: Modifier = Modifier,
     onError: ((PlaybackException) -> Unit)? = null,
@@ -88,6 +90,11 @@ internal fun VideoPlayer(
     // Control volume
     LaunchedEffect(isMuted) {
         player.volume = if (isMuted) 0f else 1f
+    }
+
+    // Control playback speed
+    LaunchedEffect(playbackSpeed) {
+        player.setPlaybackSpeed(playbackSpeed)
     }
 
     Box(modifier = modifier.fillMaxSize()) {
