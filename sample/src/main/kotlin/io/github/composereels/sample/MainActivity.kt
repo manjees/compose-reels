@@ -1,6 +1,7 @@
 package io.github.composereels.sample
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -38,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.composereels.ComposeReels
 import io.github.composereels.ReelsConfig
+import io.github.composereels.model.ReelsAnalytics
 import io.github.composereels.rememberReelsState
 import io.github.composereels.sample.ui.theme.ComposeReelsTheme
 
@@ -86,6 +88,20 @@ fun ReelsFeedScreen() {
         onSingleTap = { _, _ ->
             reelsState.togglePlayPause()
         },
+        onError = { index, reel, error ->
+            Log.e("ComposeReels", "Error at index $index (${reel.username}): $error")
+        },
+        analytics = ReelsAnalytics(
+            onVideoStart = { index ->
+                Log.d("ComposeReels", "▶ Video started at index $index")
+            },
+            onVideoPaused = { index, watchTimeMs ->
+                Log.d("ComposeReels", "⏸ Video paused at index $index, watched ${watchTimeMs}ms")
+            },
+            onVideoCompleted = { index ->
+                Log.d("ComposeReels", "✅ Video completed at index $index")
+            }
+        ),
         modifier = Modifier.fillMaxSize()
     ) { reel ->
         CustomReelOverlay(

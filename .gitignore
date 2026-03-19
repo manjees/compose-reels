@@ -78,5 +78,8 @@ doc/
 # Claude
 .claude/
 
+# Codex
+.codex/
+
 # Kotlin
 .kotlin/

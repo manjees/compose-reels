@@ -19,6 +19,16 @@ data class SampleReel(
  */
 object SampleData {
     val reels = listOf(
+        // Error test - invalid URL
+        SampleReel(
+            id = "0",
+            mediaSource = MediaSource.Video(
+                url = "https://invalid-url.example.com/not-a-video.mp4"
+            ),
+            username = "error_test",
+            description = "This should show the error UI with retry button",
+            likes = 0
+        ),
         // Videos
         SampleReel(
             id = "1",
