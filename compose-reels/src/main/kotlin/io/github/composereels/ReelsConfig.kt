@@ -11,6 +11,8 @@ package io.github.composereels
  * @param playerPoolSize Maximum number of ExoPlayer instances in the pool.
  *        Must be at least (preloadCount * 2) + 1 to support preloading in both directions plus current page.
  * @param infiniteScroll Whether to loop back to the first item after reaching the end
+ * @param longPressFastPlaybackEnabled Whether long-press to temporarily boost playback speed is enabled
+ * @param longPressFastPlaybackSpeed Playback speed multiplier to use while long press is active
  */
 data class ReelsConfig(
     val autoPlay: Boolean = true,
@@ -19,13 +21,18 @@ data class ReelsConfig(
     val showProgressBar: Boolean = true,
     val preloadCount: Int = 2,
     val playerPoolSize: Int = 5,
-    val infiniteScroll: Boolean = false
+    val infiniteScroll: Boolean = false,
+    val longPressFastPlaybackEnabled: Boolean = true,
+    val longPressFastPlaybackSpeed: Float = 2f
 ) {
     init {
         val minPoolSize = (preloadCount * 2) + 1
         require(playerPoolSize >= minPoolSize) {
             "playerPoolSize ($playerPoolSize) must be at least (preloadCount * 2) + 1 = $minPoolSize " +
                 "to support preloading $preloadCount items in both directions plus the current page."
+        }
+        require(longPressFastPlaybackSpeed > 0f) {
+            "longPressFastPlaybackSpeed must be greater than 0."
         }
     }
 

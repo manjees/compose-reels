@@ -22,6 +22,7 @@ import io.github.composereels.ReelsState
 import io.github.composereels.model.MediaSource
 import io.github.composereels.model.ReelsAnalytics
 import io.github.composereels.player.rememberReelsPlayerController
+import io.github.composereels.ui.gesture.longPressFastPlaybackGesture
 import io.github.composereels.ui.gesture.pinchToZoom
 import io.github.composereels.ui.gesture.reelsTapGesture
 import io.github.composereels.ui.gesture.rememberZoomState
@@ -115,6 +116,15 @@ internal fun <T> ReelsPagerImpl(
                         onDoubleTap = onDoubleTap?.let { callback -> { _ -> callback(actualIndex, item) } },
                         onSingleTap = onSingleTap?.let { callback -> { callback(actualIndex, item) } }
                     )
+                    .longPressFastPlaybackGesture(
+                        enabled = config.longPressFastPlaybackEnabled && isCurrentPage,
+                        onFastPlaybackStart = {
+                            reelsState.setPlaybackSpeed(config.longPressFastPlaybackSpeed)
+                        },
+                        onFastPlaybackEnd = {
+                            reelsState.setPlaybackSpeed(1f)
+                        }
+                    )
                     .then(
                         if (config.isZoomEnabled) {
                             Modifier.pinchToZoom(
@@ -140,6 +150,7 @@ internal fun <T> ReelsPagerImpl(
                                 player = player,
                                 isPlaying = isCurrentPage && reelsState.isPlaying,
                                 isMuted = reelsState.isMuted,
+                                playbackSpeed = if (isCurrentPage) reelsState.playbackSpeed else 1f,
                                 thumbnailUrl = source.thumbnailUrl,
                                 onError = { error ->
                                     videoError = error

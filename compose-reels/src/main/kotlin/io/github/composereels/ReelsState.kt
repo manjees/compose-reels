@@ -55,6 +55,12 @@ class ReelsState internal constructor(
         internal set
 
     /**
+     * Current playback speed multiplier (1.0f = normal speed).
+     */
+    var playbackSpeed: Float by mutableFloatStateOf(1f)
+        internal set
+
+    /**
      * Whether zoom is currently active (scale > 1.0).
      */
     val isZoomed: Boolean
@@ -72,6 +78,13 @@ class ReelsState internal constructor(
      */
     fun toggleMute() {
         isMuted = !isMuted
+    }
+
+    /**
+     * Update playback speed multiplier.
+     */
+    fun setPlaybackSpeed(speed: Float) {
+        playbackSpeed = speed
     }
 
     /**

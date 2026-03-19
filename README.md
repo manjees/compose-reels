@@ -15,6 +15,7 @@ A Jetpack Compose library for creating Instagram Reels / TikTok / YouTube Shorts
 - ExoPlayer with player pooling (memory efficient)
 - Pinch-to-zoom with spring animation
 - Double-tap gesture detection
+- Long-press to boost playback to fast mode (TikTok-style 2x)
 - Play/Pause & Mute controls
 - Infinite scroll support
 - Lifecycle-aware playback management
@@ -120,7 +121,9 @@ ReelsConfig(
     isMuted = false,           // Start muted
     infiniteScroll = false,    // Loop back to first item
     preloadCount = 2,          // Preload N items in both directions
-    playerPoolSize = 5         // Max ExoPlayer instances
+    playerPoolSize = 5,        // Max ExoPlayer instances
+    longPressFastPlaybackEnabled = true, // Enable long-press fast playback
+    longPressFastPlaybackSpeed = 2f      // Speed multiplier while pressing
 )
 ```
 
@@ -136,12 +139,14 @@ reelsState.currentPage      // Current page index
 reelsState.isPlaying        // Playback state
 reelsState.isMuted          // Mute state
 reelsState.isZoomed         // Zoom state
+reelsState.playbackSpeed    // Current playback speed multiplier
 
 // Methods
 reelsState.togglePlayPause()
 reelsState.toggleMute()
 reelsState.play()
 reelsState.pause()
+reelsState.setPlaybackSpeed(speed)
 reelsState.scrollToPage(index)
 reelsState.animateScrollToPage(index)
 ```
