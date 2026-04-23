@@ -19,92 +19,89 @@ data class SampleReel(
  */
 object SampleData {
     val reels = listOf(
-        // Error test - invalid URL
-        SampleReel(
-            id = "0",
-            mediaSource = MediaSource.Video(
-                url = "https://invalid-url.example.com/not-a-video.mp4"
-            ),
-            username = "error_test",
-            description = "This should show the error UI with retry button",
-            likes = 0
-        ),
-        // Videos
+        // Videos (bundled in sample/src/main/assets)
         SampleReel(
             id = "1",
             mediaSource = MediaSource.Video(
-                url = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-                thumbnailUrl = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg"
+                url = "asset:///sample_1.mp4"
             ),
             username = "nature_lover",
-            description = "Big Buck Bunny - A short open movie project",
+            description = "Bundled sample clip #1",
             likes = 12500
         ),
         // Image
         SampleReel(
             id = "2",
             mediaSource = MediaSource.Image(
-                url = "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1080",
-                contentDescription = "Mountain landscape"
+                url = "file:///android_asset/image_sample_1.jpg",
+                contentDescription = "Lake with clouds and greenery"
             ),
             username = "travel_photos",
-            description = "Beautiful mountain sunrise view",
+            description = "Peaceful lake reflections",
             likes = 8430
         ),
         // Video
         SampleReel(
             id = "3",
             mediaSource = MediaSource.Video(
-                url = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
-                thumbnailUrl = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/ForBiggerBlazes.jpg"
+                url = "asset:///sample_2.mp4"
             ),
             username = "action_reels",
-            description = "For Bigger Blazes - Google Chrome ad",
+            description = "Bundled sample clip #2",
             likes = 5200
         ),
         // Image
         SampleReel(
             id = "4",
             mediaSource = MediaSource.Image(
-                url = "https://images.unsplash.com/photo-1519681393784-d120267933ba?w=1080",
-                contentDescription = "Starry night sky"
+                url = "file:///android_asset/image_sample_2.jpg",
+                contentDescription = "Rocky pier by the sea"
             ),
             username = "night_sky",
-            description = "Milky way over the mountains",
+            description = "Rocky outcrop over calm water",
             likes = 15600
         ),
         // Video
         SampleReel(
             id = "5",
             mediaSource = MediaSource.Video(
-                url = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
-                thumbnailUrl = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/ForBiggerEscapes.jpg"
+                url = "asset:///sample_3.mp4"
             ),
             username = "adventure_time",
-            description = "For Bigger Escapes - Exciting chase scene",
+            description = "Bundled sample clip #3",
             likes = 9870
         ),
         // Image
         SampleReel(
             id = "6",
             mediaSource = MediaSource.Image(
-                url = "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1080",
-                contentDescription = "Ocean waves"
+                url = "file:///android_asset/image_sample_3.jpg",
+                contentDescription = "Green field under a cloudy sky"
             ),
             username = "ocean_vibes",
-            description = "Peaceful ocean waves at sunset",
+            description = "Open meadow on a bright day",
             likes = 7320
         ),
         // Video
         SampleReel(
             id = "7",
             mediaSource = MediaSource.Video(
-                url = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
-                thumbnailUrl = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/ForBiggerFun.jpg"
+                url = "asset:///sample_4.mp4"
             ),
             username = "fun_videos",
-            description = "For Bigger Fun - Entertainment at its best",
+            description = "Bundled sample clip #4",
             likes = 11200
+        ),
+        // Image
+        SampleReel(
+            id = "8",
+            mediaSource = MediaSource.Image(
+                url = "file:///android_asset/image_sample_4.jpg",
+                contentDescription = "Mountains seen through leaves"
+            ),
+            username = "mountain_view",
+            description = "Distant ridges through the foliage",
+            likes = 6100
         )
     )
 }
