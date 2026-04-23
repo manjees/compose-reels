@@ -5,6 +5,7 @@ import androidx.annotation.OptIn
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.database.StandaloneDatabaseProvider
 import androidx.media3.datasource.DataSource
+import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.datasource.cache.Cache
 import androidx.media3.datasource.cache.CacheDataSource
@@ -40,8 +41,9 @@ internal object VideoCache {
             StandaloneDatabaseProvider(context)
         ).also { cache = it }
 
-        val upstreamFactory = DefaultHttpDataSource.Factory()
+        val httpFactory = DefaultHttpDataSource.Factory()
             .setAllowCrossProtocolRedirects(true)
+        val upstreamFactory = DefaultDataSource.Factory(context, httpFactory)
 
         return CacheDataSource.Factory()
             .setCache(cacheInstance)
