@@ -9,7 +9,8 @@ package io.github.composereels
  * @param showProgressBar Whether to show the progress bar for videos
  * @param preloadCount Number of items to preload ahead of current position (in both directions)
  * @param playerPoolSize Maximum number of ExoPlayer instances in the pool.
- *        Must be at least (preloadCount * 2) + 1 to support preloading in both directions plus current page.
+ *        Must be at least (preloadCount * 2) + 1 to support preloading in both directions plus the current page.
+ *        The default adds two slots of fling-time headroom so the pool doesn't starve between scroll and settle.
  * @param infiniteScroll Whether to loop back to the first item after reaching the end
  * @param longPressFastPlaybackEnabled Whether long-press to temporarily boost playback speed is enabled
  * @param longPressFastPlaybackSpeed Playback speed multiplier to use while long press is active
@@ -20,7 +21,7 @@ data class ReelsConfig(
     val isMuted: Boolean = false,
     val showProgressBar: Boolean = true,
     val preloadCount: Int = 2,
-    val playerPoolSize: Int = 5,
+    val playerPoolSize: Int = (preloadCount * 2) + 3,
     val infiniteScroll: Boolean = false,
     val longPressFastPlaybackEnabled: Boolean = true,
     val longPressFastPlaybackSpeed: Float = 2f

@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.FastForward
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -119,7 +120,16 @@ internal fun <T> ReelsPagerImpl(
         val isCurrentPage = page == settledPage
 
         var videoError by remember(page) { mutableStateOf<PlaybackException?>(null) }
-        var videoRetryKey by remember(page) { mutableIntStateOf(0) }
+
+        // Return this page's player to the pool as soon as the page leaves
+        // composition. Driven by Compose's own disposal lifecycle, this keeps
+        // the pool self-regulating during fast flings where the settledPage
+        // collector (and releaseDistantPlayers) can't keep up.
+        DisposableEffect(page) {
+            onDispose {
+                playerController.releasePlayer(page)
+            }
+        }
 
         Box(
             modifier = Modifier
@@ -159,9 +169,10 @@ internal fun <T> ReelsPagerImpl(
             ) {
                 when (source) {
                     is MediaSource.Video -> {
-                        val player = remember(page, videoRetryKey) {
-                            playerController.getPlayer(page, source.url)
-                        }
+                        // Called every recomposition. getPlayer is idempotent for
+                        // pages already in activePlayersMap, and retries allocation
+                        // when the pool had no capacity on the previous attempt.
+                        val player = playerController.getPlayer(page, source.url)
 
                         if (player != null) {
                             VideoPlayer(
@@ -199,7 +210,6 @@ internal fun <T> ReelsPagerImpl(
                         onRetry = {
                             videoError = null
                             playerController.releasePlayer(page)
-                            videoRetryKey++
                         }
                     )
                 }

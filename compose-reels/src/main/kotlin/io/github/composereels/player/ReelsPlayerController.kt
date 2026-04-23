@@ -29,7 +29,9 @@ internal class ReelsPlayerController(
 
     /**
      * Get or create a player for the given page index.
-     * Returns null if no player is available from the pool.
+     * Returns null if no player is available from the pool. Callers should
+     * retry on the next recomposition rather than caching null — once the
+     * pool frees up (via [releaseDistantPlayers]) the next call will succeed.
      */
     fun getPlayer(pageIndex: Int, videoUrl: String): ExoPlayer? {
         activePlayersMap[pageIndex]?.let { return it }
