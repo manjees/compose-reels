@@ -52,6 +52,7 @@ fun Modifier.reelsGestures(
             val downPosition = down.position
             val pointerId = down.id
             var isLongPressActive = false
+            var movedTooMuch = false
 
             // 1. Wait for long press or up/move
             val longPressResult = withTimeoutOrNull(longPressTimeout) {
@@ -65,7 +66,8 @@ fun Modifier.reelsGestures(
 
                     val distance = (change.position - downPosition).getDistance()
                     if (distance > touchSlop) {
-                        return@withTimeoutOrNull false // Moved too much
+                        movedTooMuch = true
+                        return@withTimeoutOrNull false // Treated as scroll/swipe, not a tap
                     }
                 }
             }
@@ -85,6 +87,9 @@ fun Modifier.reelsGestures(
                     }
                 }
                 onFastPlaybackEnd()
+            } else if (movedTooMuch) {
+                // Swipe/scroll gesture — do not treat as a tap
+                return@awaitEachGesture
             } else {
                 // It was a short press (Tap or Double Tap)
                 // Wait for up event if not already up
