@@ -11,7 +11,7 @@ android {
     defaultConfig {
         applicationId = "io.github.composereels.sample"
         minSdk = 24
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
