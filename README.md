@@ -41,7 +41,7 @@ Add dependency to your module's `build.gradle.kts`:
 
 ```kotlin
 dependencies {
-    implementation("com.github.manjees:compose-reels:1.1.0")
+    implementation("com.github.manjees:compose-reels:1.1.1")
 }
 ```
 
@@ -214,7 +214,11 @@ ReelsConfig(
 ## ReelsState API
 
 ```kotlin
-val reelsState = rememberReelsState(pageCount = { items.size })
+val reelsState = rememberReelsState(
+    pageCount = { items.size },
+    config = config              // Pass the same config you give ComposeReels
+    // initialPlaying = config.autoPlay, initialMuted = config.isMuted (defaults)
+)
 
 // Properties
 reelsState.currentPage      // Current page index

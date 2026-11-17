@@ -24,6 +24,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -34,6 +35,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.media3.common.PlaybackException
 import io.github.composereels.ReelsConfig
 import io.github.composereels.ReelsState
@@ -66,11 +70,14 @@ internal fun <T> ReelsPagerImpl(
     if (items.isEmpty()) return
 
     val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
     val playerController = rememberReelsPlayerController(context, config)
     val pagerState = reelsState.pagerState
 
     // Track settled page to avoid recomposition during scroll
     var settledPage by remember { mutableIntStateOf(pagerState.settledPage) }
+    val currentSettledPage by rememberUpdatedState(settledPage)
+    val currentIsPlaying by rememberUpdatedState(reelsState.isPlaying)
 
     LaunchedEffect(pagerState) {
         snapshotFlow { pagerState.settledPage }
@@ -107,6 +114,25 @@ internal fun <T> ReelsPagerImpl(
         }
     }
 
+    // Pause everything when the host goes to background, and resume the current
+    // page on return. The isPlaying effect above won't re-run on resume because
+    // the state never changed, so the restart has to happen here.
+    DisposableEffect(lifecycleOwner, playerController) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_PAUSE -> playerController.pauseAll()
+                Lifecycle.Event.ON_RESUME -> {
+                    if (currentIsPlaying) playerController.play(currentSettledPage)
+                }
+                else -> Unit
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
     VerticalPager(
         state = pagerState,
         modifier = modifier.fillMaxSize(),
@@ -114,6 +140,15 @@ internal fun <T> ReelsPagerImpl(
         beyondViewportPageCount = config.preloadCount
     ) { page ->
         val actualIndex = reelsState.getActualIndex(page)
+        // The pager's page count can briefly lag behind a shrinking item list.
+        if (actualIndex !in items.indices) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black)
+            )
+            return@VerticalPager
+        }
         val item = items[actualIndex]
         val source = mediaSource(item)
         val zoomState = rememberZoomState()

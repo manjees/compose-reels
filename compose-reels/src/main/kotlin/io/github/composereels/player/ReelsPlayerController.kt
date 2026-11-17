@@ -4,11 +4,7 @@ import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.media3.common.MediaItem
-import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import io.github.composereels.ReelsConfig
@@ -26,20 +22,28 @@ internal class ReelsPlayerController(
     )
     private val playerPool = PlayerPool(appContext, config.playerPoolSize, mediaSourceFactory)
     private val activePlayersMap = mutableMapOf<Int, ExoPlayer>()
+    private val activePlayerUrls = mutableMapOf<Int, String>()
 
     /**
      * Get or create a player for the given page index.
      * Returns null if no player is available from the pool. Callers should
      * retry on the next recomposition rather than caching null — once the
      * pool frees up (via [releaseDistantPlayers]) the next call will succeed.
+     *
+     * If the page already holds a player prepared for a different URL (e.g. the
+     * item list was replaced), that player is recycled and a fresh one acquired.
      */
     fun getPlayer(pageIndex: Int, videoUrl: String): ExoPlayer? {
-        activePlayersMap[pageIndex]?.let { return it }
+        activePlayersMap[pageIndex]?.let { player ->
+            if (activePlayerUrls[pageIndex] == videoUrl) return player
+            releasePlayer(pageIndex)
+        }
 
         val player = playerPool.acquire() ?: return null
         player.setMediaItem(MediaItem.fromUri(videoUrl))
         player.prepare()
         activePlayersMap[pageIndex] = player
+        activePlayerUrls[pageIndex] = videoUrl
         return player
     }
 
@@ -76,6 +80,7 @@ internal class ReelsPlayerController(
      * Release player for the given page index.
      */
     fun releasePlayer(pageIndex: Int) {
+        activePlayerUrls.remove(pageIndex)
         activePlayersMap.remove(pageIndex)?.let { player ->
             playerPool.release(player)
         }
@@ -96,33 +101,26 @@ internal class ReelsPlayerController(
      */
     fun release() {
         activePlayersMap.clear()
+        activePlayerUrls.clear()
         playerPool.releaseAll()
     }
 }
 
 /**
- * Remember a [ReelsPlayerController] that is lifecycle-aware.
+ * Remember a [ReelsPlayerController] that releases its players when it leaves composition.
+ * Lifecycle-driven pause/resume is handled by the pager, which knows the playback state.
  */
 @Composable
 internal fun rememberReelsPlayerController(
     context: Context,
     config: ReelsConfig
 ): ReelsPlayerController {
-    val lifecycleOwner = LocalLifecycleOwner.current
     val controller = remember(context, config) {
         ReelsPlayerController(context, config)
     }
 
-    DisposableEffect(lifecycleOwner, controller) {
-        val observer = LifecycleEventObserver { _, event ->
-            when (event) {
-                Lifecycle.Event.ON_PAUSE -> controller.pauseAll()
-                else -> Unit
-            }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
+    DisposableEffect(controller) {
         onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
             controller.release()
         }
     }

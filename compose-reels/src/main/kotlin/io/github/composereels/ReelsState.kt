@@ -19,6 +19,7 @@ private const val INFINITE_SCROLL_PAGE_COUNT = Int.MAX_VALUE / 2
 @Stable
 class ReelsState internal constructor(
     val pagerState: PagerState,
+    initialPlaying: Boolean,
     initialMuted: Boolean,
     private val itemCount: () -> Int,
     private val infiniteScroll: Boolean
@@ -39,7 +40,7 @@ class ReelsState internal constructor(
     /**
      * Whether the current video is playing.
      */
-    var isPlaying: Boolean by mutableStateOf(true)
+    var isPlaying: Boolean by mutableStateOf(initialPlaying)
         internal set
 
     /**
@@ -140,6 +141,7 @@ class ReelsState internal constructor(
  * @param initialPage The initial page to display
  * @param pageCount The total number of pages
  * @param config Configuration for the reels component
+ * @param initialPlaying Whether to start with video playback active
  * @param initialMuted Whether to start with audio muted
  */
 @Composable
@@ -147,7 +149,8 @@ fun rememberReelsState(
     initialPage: Int = 0,
     pageCount: () -> Int,
     config: ReelsConfig = ReelsConfig(),
-    initialMuted: Boolean = false
+    initialPlaying: Boolean = config.autoPlay,
+    initialMuted: Boolean = config.isMuted
 ): ReelsState {
     val actualPageCount = if (config.infiniteScroll) INFINITE_SCROLL_PAGE_COUNT else pageCount()
     val startPage = if (config.infiniteScroll) INFINITE_SCROLL_PAGE_COUNT / 2 + initialPage else initialPage
@@ -157,6 +160,6 @@ fun rememberReelsState(
         pageCount = { actualPageCount }
     )
     return remember(pagerState) {
-        ReelsState(pagerState, initialMuted, pageCount, config.infiniteScroll)
+        ReelsState(pagerState, initialPlaying, initialMuted, pageCount, config.infiniteScroll)
     }
 }
