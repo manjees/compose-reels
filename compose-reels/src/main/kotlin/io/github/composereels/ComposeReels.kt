@@ -34,6 +34,10 @@ import io.github.composereels.ui.ReelsPagerImpl
  * @param onError Callback when a video fails to load. Receives page index, item, and the exception.
  * @param errorContent Optional custom composable to show when a video fails to load. If null, a default retry UI is shown.
  * @param analytics Analytics callbacks for tracking video playback events (start, pause, complete)
+ * @param onLoadMore Called when the user settles on a page within [ReelsConfig.loadMoreThreshold]
+ *        items of the end, so the next batch can be appended to [items]. It may be called again on
+ *        later pages before the new items arrive, so ignore calls while a load is in flight.
+ *        Ignored when [ReelsConfig.infiniteScroll] is enabled.
  * @param overlayContent Optional composable to overlay on each item (e.g., profile info, description)
  *
  * @sample
@@ -75,6 +79,7 @@ fun <T> ComposeReels(
     onError: ((Int, T, PlaybackException) -> Unit)? = null,
     errorContent: @Composable (BoxScope.(T, PlaybackException) -> Unit)? = null,
     analytics: ReelsAnalytics? = null,
+    onLoadMore: (() -> Unit)? = null,
     overlayContent: @Composable (BoxScope.(T) -> Unit)? = null
 ) {
     ReelsPagerImpl(
@@ -88,6 +93,7 @@ fun <T> ComposeReels(
         onError = onError,
         errorContent = errorContent,
         analytics = analytics,
+        onLoadMore = onLoadMore,
         modifier = modifier,
         overlayContent = overlayContent
     )

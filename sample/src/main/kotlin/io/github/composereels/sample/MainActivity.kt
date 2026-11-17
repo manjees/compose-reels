@@ -27,8 +27,12 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,6 +46,8 @@ import io.github.composereels.ReelsConfig
 import io.github.composereels.model.ReelsAnalytics
 import io.github.composereels.rememberReelsState
 import io.github.composereels.sample.ui.theme.ComposeReelsTheme
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -63,10 +69,14 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun ReelsFeedScreen() {
     val items = remember { mutableStateListOf(*SampleData.reels.toTypedArray()) }
+    val scope = rememberCoroutineScope()
+    var isLoadingMore by remember { mutableStateOf(false) }
+    var loadedPages by remember { mutableStateOf(1) }
     val config = ReelsConfig(
         autoPlay = true,
         isZoomEnabled = true,
-        infiniteScroll = true
+        showProgressBar = true,
+        loadMoreThreshold = 2
     )
     val reelsState = rememberReelsState(
         pageCount = { items.size },
@@ -102,6 +112,20 @@ fun ReelsFeedScreen() {
                 Log.d("ComposeReels", "✅ Video completed at index $index")
             }
         ),
+        onLoadMore = {
+            // Simulate a network fetch; ignore repeat calls while one is in flight.
+            if (!isLoadingMore) {
+                isLoadingMore = true
+                scope.launch {
+                    delay(800)
+                    val batch = loadedPages
+                    items += SampleData.reels.map { it.copy(id = "${it.id}-p$batch") }
+                    loadedPages++
+                    Log.d("ComposeReels", "📥 Loaded page $batch, total ${items.size} items")
+                    isLoadingMore = false
+                }
+            }
+        },
         modifier = Modifier.fillMaxSize()
     ) { reel ->
         CustomReelOverlay(
@@ -148,7 +172,7 @@ fun CustomReelOverlay(
             modifier = Modifier
                 .align(Alignment.BottomStart)
                 .padding(16.dp)
-                .padding(end = 80.dp)
+                .padding(end = 80.dp, bottom = 16.dp) // leave room for the progress bar
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(

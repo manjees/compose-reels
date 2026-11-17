@@ -152,12 +152,11 @@ fun rememberReelsState(
     initialPlaying: Boolean = config.autoPlay,
     initialMuted: Boolean = config.isMuted
 ): ReelsState {
-    val actualPageCount = if (config.infiniteScroll) INFINITE_SCROLL_PAGE_COUNT else pageCount()
     val startPage = if (config.infiniteScroll) INFINITE_SCROLL_PAGE_COUNT / 2 + initialPage else initialPage
 
     val pagerState = rememberPagerState(
         initialPage = startPage,
-        pageCount = { actualPageCount }
+        pageCount = { if (config.infiniteScroll) INFINITE_SCROLL_PAGE_COUNT else pageCount() }
     )
     return remember(pagerState) {
         ReelsState(pagerState, initialPlaying, initialMuted, pageCount, config.infiniteScroll)

@@ -64,6 +64,7 @@ internal fun <T> ReelsPagerImpl(
     onError: ((Int, T, PlaybackException) -> Unit)?,
     errorContent: @Composable (BoxScope.(T, PlaybackException) -> Unit)?,
     analytics: ReelsAnalytics?,
+    onLoadMore: (() -> Unit)?,
     modifier: Modifier = Modifier,
     overlayContent: @Composable (BoxScope.(T) -> Unit)?
 ) {
@@ -78,6 +79,8 @@ internal fun <T> ReelsPagerImpl(
     var settledPage by remember { mutableIntStateOf(pagerState.settledPage) }
     val currentSettledPage by rememberUpdatedState(settledPage)
     val currentIsPlaying by rememberUpdatedState(reelsState.isPlaying)
+    val currentItems by rememberUpdatedState(items)
+    val currentOnLoadMore by rememberUpdatedState(onLoadMore)
 
     LaunchedEffect(pagerState) {
         snapshotFlow { pagerState.settledPage }
@@ -111,6 +114,22 @@ internal fun <T> ReelsPagerImpl(
             playerController.play(settledPage)
         } else {
             playerController.pause(settledPage)
+        }
+    }
+
+    // Pagination: ask for more items once the settled page is within
+    // loadMoreThreshold of the end. Fires again on each new settled page or list
+    // size while still in that zone, so a failed load can be retried by scrolling.
+    // Not applicable to infinite scroll, where the list wraps around.
+    if (onLoadMore != null && !config.infiniteScroll) {
+        LaunchedEffect(pagerState, config.loadMoreThreshold) {
+            snapshotFlow { pagerState.settledPage to currentItems.size }
+                .distinctUntilChanged()
+                .collect { (page, size) ->
+                    if (size > 0 && page >= size - 1 - config.loadMoreThreshold) {
+                        currentOnLoadMore?.invoke()
+                    }
+                }
         }
     }
 
@@ -155,6 +174,11 @@ internal fun <T> ReelsPagerImpl(
         val isCurrentPage = page == settledPage
 
         var videoError by remember(page) { mutableStateOf<PlaybackException?>(null) }
+
+        // Called every recomposition. getPlayer is idempotent for pages already
+        // in activePlayersMap, and retries allocation when the pool had no
+        // capacity on the previous attempt.
+        val player = (source as? MediaSource.Video)?.let { playerController.getPlayer(page, it.url) }
 
         // Return this page's player to the pool as soon as the page leaves
         // composition. Driven by Compose's own disposal lifecycle, this keeps
@@ -204,11 +228,6 @@ internal fun <T> ReelsPagerImpl(
             ) {
                 when (source) {
                     is MediaSource.Video -> {
-                        // Called every recomposition. getPlayer is idempotent for
-                        // pages already in activePlayersMap, and retries allocation
-                        // when the pool had no capacity on the previous attempt.
-                        val player = playerController.getPlayer(page, source.url)
-
                         if (player != null) {
                             VideoPlayer(
                                 player = player,
@@ -262,6 +281,15 @@ internal fun <T> ReelsPagerImpl(
 
             // User's overlay UI
             overlayContent?.invoke(this, item)
+
+            // Progress bar sits above the overlay so the user's UI can't block seeking.
+            if (config.showProgressBar && player != null && isCurrentPage && videoError == null) {
+                VideoProgressBar(
+                    player = player,
+                    isPlaying = reelsState.isPlaying,
+                    modifier = Modifier.align(Alignment.BottomCenter)
+                )
+            }
 
             // Fast playback speed indicator (TikTok style)
             if (source is MediaSource.Video && isCurrentPage) {

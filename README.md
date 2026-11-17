@@ -19,6 +19,8 @@ A Jetpack Compose library for creating Instagram Reels / TikTok / YouTube Shorts
 - Double-tap gesture detection
 - Long-press to boost playback to fast mode (TikTok-style 2x) with visual indicator
 - Play/Pause & Mute controls
+- Seekable progress bar (Shorts-style: thin line that thickens while dragging)
+- Pagination via `onLoadMore` callback
 - Error handling with built-in retry UI (customizable)
 - Analytics callbacks (video start / pause with watch time / completed)
 - Infinite scroll support
@@ -116,6 +118,34 @@ ComposeReels(
 )
 ```
 
+### Pagination
+
+Pass `onLoadMore` to append the next batch when the user nears the end of the feed. It fires when the settled page is within `loadMoreThreshold` items of the end, and may fire again on later pages before your new items arrive — so ignore calls while a request is in flight.
+
+```kotlin
+val items = remember { mutableStateListOf<ReelItem>() }
+var isLoading by remember { mutableStateOf(false) }
+val scope = rememberCoroutineScope()
+
+ComposeReels(
+    items = items,
+    state = reelsState,
+    config = ReelsConfig(loadMoreThreshold = 3),
+    mediaSource = { MediaSource.Video(it.videoUrl) },
+    onLoadMore = {
+        if (!isLoading) {
+            isLoading = true
+            scope.launch {
+                items += repository.fetchNextPage()
+                isLoading = false
+            }
+        }
+    }
+)
+```
+
+> `onLoadMore` is ignored when `infiniteScroll = true`, since the feed loops instead of ending.
+
 ### Local Media
 
 Videos and images don't have to come from the network — any URI scheme supported by ExoPlayer and Coil works. Useful for bundled content, downloaded files, or content picked via `MediaStore`.
@@ -201,11 +231,13 @@ ReelsConfig(
     autoPlay = true,           // Auto-play videos
     isZoomEnabled = true,      // Enable pinch-to-zoom
     isMuted = false,           // Start muted
+    showProgressBar = true,    // Seekable progress bar at the bottom of videos
     infiniteScroll = false,    // Loop back to first item
     preloadCount = 2,          // Preload N items in both directions
     playerPoolSize = 7,        // Max ExoPlayer instances — defaults to (preloadCount * 2) + 3
     longPressFastPlaybackEnabled = true, // Enable long-press fast playback
-    longPressFastPlaybackSpeed = 2f      // Speed multiplier while pressing
+    longPressFastPlaybackSpeed = 2f,     // Speed multiplier while pressing
+    loadMoreThreshold = 3      // Trigger onLoadMore this many items before the end
 )
 ```
 
